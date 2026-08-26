@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NOVORA — Homework & Study Planner</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">
+        <span class="dot"></span>
+        <span class="bar"></span>
+      </div>
+      <div class="brandText">
+        <div class="siteName">NOVORA</div>
+        <div class="teamName">ALTO SHIFTO CONTROLO</div>
+      </div>
+    </div>
+
+    <div class="topActions">
+      <span id="userStatus" class="userStatus">Not logged in</span>
+      <button id="btnLogout" class="btn ghost" type="button" title="Logout" style="display: none;">🔒 Logout</button>
+      <button id="btnRequestNotif" class="btn neon" type="button" title="Enable notifications (optional)">
+        🔔 Enable Notifications
+      </button>
+      <button id="btnResetAll" class="btn ghost" type="button" title="Clear all saved data">
+        ♻️ Reset
+      </button>
+    </div>
+  </header>
+
+  <!-- Login / Register Section -->
+  <section id="authSection" class="container authContainer">
+    <div class="panel authPanel">
+      <div class="panelHeader">
+        <h2>🔐 Firebase Authentication</h2>
+      </div>
+      <p class="authSubtitle">Login or create an account to start planning.</p>
+      
+      <div class="field authField">
+        <label for="authEmail">Email Address</label>
+        <input id="authEmail" type="email" placeholder="name@example.com" />
+      </div>
+      <div class="field authField">
+        <label for="authPassword">Password</label>
+        <input id="authPassword" type="password" placeholder="••••••••" />
+      </div>
+      
+      <div class="row authButtons">
+        <button id="btnLogin" class="btn neon" type="button">Login</button>
+        <button id="btnSignup" class="btn ghost" type="button">Sign Up</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main App Content (Hidden until login) -->
+  <main id="mainContent" class="container" style="display: none;">
+    <!-- Hero / Slogan -->
+    <section class="hero">
+      <div class="heroCard">
+        <div class="heroTitle">
+          <span class="neonGlow">Focus</span> • <span class="neonGlow2">Plan</span> • <span class="neonGlow3">Finish</span>
+        </div>
+        <p class="heroSubtitle" id="sloganText"></p>
+
+        <div class="heroStats">
+          <div class="stat">
+            <div class="statValue" id="statTotal">0</div>
+            <div class="statLabel">Homework Items</div>
+          </div>
+          <div class="stat">
+            <div class="statValue" id="statDueSoon">0</div>
+            <div class="statLabel">Due Soon</div>
+          </div>
+          <div class="stat">
+            <div class="statValue" id="statDone">0</div>
+            <div class="statLabel">Completed</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Layout grid -->
+    <div class="grid">
+      <!-- LEFT: Homework -->
+      <section class="panel">
+        <div class="panelHeader">
+          <h2>📚 Homework Manager</h2>
+          <span class="badge" id="filterBadge">All Subjects</span>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label>Subject</label>
+            <select id="hwSubject">
+              <option value="Math">Math</option>
+              <option value="Science">Science</option>
+              <option value="English">English</option>
+              <option value="History">History</option>
+              <option value="Computer Science">Computer Science</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Energy Level</label>
+            <select id="hwEnergy">
+              <option value="low">Low</option>
+              <option value="medium" selected>Medium</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label>Title</label>
+            <input id="hwTitle" type="text" placeholder="e.g., Algebra worksheet" maxlength="80" />
+          </div>
+          <div class="field">
+            <label>Due Date</label>
+            <input id="hwDue" type="date" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label>Notes</label>
+            <input id="hwNotes" type="text" placeholder="Optional notes" maxlength="120" />
+          </div>
+          <div class="field">
+            <label>Reminder (minutes before)</label>
+            <input id="hwReminderMin" type="number" min="0" step="5" placeholder="e.g., 60" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label>Attachment (image)</label>
+            <input id="hwFile" type="file" accept="image/*" />
+            <div class="hint">Stored locally in your browser.</div>
+          </div>
+          <div class="field">
+            <label>Quick Actions</label>
+            <div class="inlineActions">
+              <button id="btnAddHw" class="btn neon" type="button">➕ Add Homework</button>
+              <button id="btnSort" class="btn ghost" type="button" title="Sort by due date">⏳ Sort</button>
+            </div>
+          </div>
+        </div>
+
+        <hr class="divider" />
+
+        <div class="row">
+          <div class="field">
+            <label>Filter by Subject</label>
+            <select id="hwFilter">
+              <option value="All" selected>All Subjects</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Show</label>
+            <select id="hwShow">
+              <option value="active" selected>Active only</option>
+              <option value="all">All</option>
+              <option value="done">Completed only</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="hwList" class="list"></div>
+      </section>
+
+      <!-- RIGHT: Routines + Schedule + Reminders -->
+      <section class="panel panelSecondary">
+        <div class="panelHeader">
+          <h2>🗓️ Daily Follow-up & Weekly Routine</h2>
+        </div>
+
+        <div class="tabs">
+          <button class="tab active" data-tab="tabToday">Today</button>
+          <button class="tab" data-tab="tabWeek">Week</button>
+          <button class="tab" data-tab="tabSchedule">Study Schedule</button>
+          <button class="tab" data-tab="tabSettings">Settings</button>
+        </div>
+
+        <div class="tabContent">
+          <!-- Today -->
+          <div class="tabPane active" id="tabToday">
+            <div class="row">
+              <div class="field">
+                <label>Daily Focus (text)</label>
+                <input id="todayFocus" type="text" placeholder="e.g., Math + revision" maxlength="120" />
+              </div>
+              <div class="field">
+                <label>Mark: Completed?</label>
+                <select id="todayDone">
+                  <option value="no" selected>No</option>
+                  <option value="yes">Yes</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="field">
+                <label>Energy you have today</label>
+                <select id="todayEnergy">
+                  <option value="low">Low</option>
+                  <option value="medium" selected>Medium</option>
+                  <option value="high">High</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Set Energy-Based Tasks</label>
+                <button id="btnGenerate" class="btn neon" type="button">⚡ Generate Study Plan</button>
+              </div>
+            </div>
+
+            <div class="miniCard">
+              <div class="miniTitle">✅ Today Summary</div>
+              <div id="todaySummary" class="miniText">Add homework and generate a plan.</div>
+            </div>
+
+            <div id="todayPlan" class="list miniList"></div>
+          </div>
+
+          <!-- Week -->
+          <div class="tabPane" id="tabWeek">
+            <div class="row">
+              <div class="field">
+                <label>Weekly goal (text)</label>
+                <input id="weekGoal" type="text" placeholder="e.g., Finish chapter 3 revision" maxlength="140" />
+              </div>
+              <div class="field">
+                <label>Work days (comma separated)</label>
+                <input id="weekDays" type="text" placeholder="e.g., Mon,Wed,Fri" maxlength="60" />
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="field">
+                <button id="btnSaveWeek" class="btn neon" type="button">💾 Save Weekly Routine</button>
+                <button id="btnLoadWeek" class="btn ghost" type="button">📥 Load</button>
+              </div>
+            </div>
+
+            <div class="miniCard">
+              <div class="miniTitle">📅 Weekly Routine Preview</div>
+              <div id="weekPreview" class="miniText"></div>
+            </div>
+          </div>
+
+          <!-- Schedule -->
+          <div class="tabPane" id="tabSchedule">
+            <div class="row">
+              <div class="field">
+                <label>Planning horizon (days)</label>
+                <input id="horizonDays" type="number" min="1" max="14" step="1" value="7" />
+              </div>
+              <div class="field">
+                <label>Preference</label>
+                <select id="schedulePreference">
+                  <option value="dueFirst" selected>Due date priority</option>
+                  <option value="energyFirst">Match energy priority</option>
+                  <option value="balanced">Balanced</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="field">
+                <button id="btnBuildSchedule" class="btn neon" type="button">🧠 Build Schedule</button>
+                <button id="btnClearSchedule" class="btn ghost" type="button">🧹 Clear</button>
+              </div>
+            </div>
+
+            <div class="miniCard">
+              <div class="miniTitle">🧩 Your Study Schedule</div>
+              <div id="scheduleOutput" class="miniText"></div>
+            </div>
+
+            <div id="scheduleList" class="list miniList"></div>
+          </div>
+
+          <!-- Settings -->
+          <div class="tabPane" id="tabSettings">
+            <div class="row">
+              <div class="field">
+                <label>Motivation Mode</label>
+                <select id="motivationMode">
+                  <option value="soft" selected>Soft & steady</option>
+                  <option value="hype">Hype & push</option>
+                  <option value="calm">Calm & focused</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Notification Behavior</label>
+                <select id="notifMode">
+                  <option value="disabled">Disabled</option>
+                  <option value="browser" selected>Browser notifications</option>
+                  <option value="inApp">In-app reminders only</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="field">
+                <label>Daily reminder time</label>
+                <input id="dailyNotifTime" type="time" />
+                <div class="hint">Optional. Uses in-app reminders unless browser notifications are enabled.</div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="field">
+                <button id="btnSaveSettings" class="btn neon" type="button">💾 Save Settings</button>
+                <button id="btnTestNotif" class="btn ghost" type="button">🧪 Test Reminder</button>
+              </div>
+            </div>
+
+            <div class="miniCard">
+              <div class="miniTitle">🔒 Offline-first</div>
+              <div class="miniText">All homework, attachments, and plans are stored locally using <b>localStorage</b>.</div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div>© NOVORA • ALTO SHIFTO CONTROLO</div>
+    <div class="footerHint">“Small steps every day. Big outcomes.”</div>
+  </footer>
+
+  <!-- Notification toast -->
+  <div id="toast" class="toast" aria-live="polite"></div>
+<!-- 1. الفايربيس الأساسي -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+
+<!-- 2. المصادقة (Auth) -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
+<!-- 3. قاعدة البيانات اللحظية (Realtime Database) -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+<!-- 4. ملف السكربت الخاص بك في النهاية -->
+<script src="script.js"></script>
+<!-- استدعاء ملف السكريبت بدون type="module" -->
+<script src="script.js"></script>
+</body>
+</html>
